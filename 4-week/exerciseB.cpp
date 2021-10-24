@@ -6,9 +6,24 @@ using ll = long long;
 vector<int> inputs;
 vector<int> segmentTree;
 
+int op_inclusive(int l, int r, int ti, int tl, int tr) {
+    if (l > r) {
+        return 0;
+    }
+    
+    if (l == tl && r == tr) {
+        return segmentTree[ti];
+    }
+
+    int tm = (tl + tr) / 2;
+
+    return op_inclusive(l, min(r, tm), ti*2, tl, tm) +
+         op_inclusive(max(l, tm+1), r, ti*2+1, tm+1, tr);
+}
+
 void set_value(int i, int v, int ti, int tl, int tr) {
     if (tl == tr) {
-        segmentTree[ti] = v;
+        segmentTree[ti]++;
         return;
     }
     
@@ -23,7 +38,7 @@ void set_value(int i, int v, int ti, int tl, int tr) {
 
 void build(int ti, int tl, int tr) {
     if (tl == tr) {
-        segmentTree[ti] = 1;
+        segmentTree[ti] = 0;
         return;
     }
     int tm = (tl + tr) / 2;
@@ -61,10 +76,11 @@ int main() {
             cam += value;
         }
         else if (op == 'd') {
-            set_value(n - segmentTree[1] + cam, 0, 1, 0, n-1);
+            set_value(cam, 1, 1, 0, n-1);
         }
-        else if (op == 'q'){
-            cout << inputs[n - segmentTree[1] + cam] << "\n";
+        else if (op == 'q') {
+            int invalid = op_inclusive(0, cam, 1, 0, n-1);
+            cout << inputs[cam + invalid] << "\n";
         }
     }
 }
