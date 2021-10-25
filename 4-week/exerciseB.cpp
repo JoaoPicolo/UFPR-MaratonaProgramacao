@@ -3,66 +3,41 @@
 using namespace std;
 using ll = long long;
 
+int n, q;
 vector<int> inputs;
-vector<int> segmentTree;
+vector<int> fw;
 
-int op_inclusive(int l, int r, int ti, int tl, int tr) {
-    if (l > r) {
-        return 0;
-    }
-    
-    if (l == tl && r == tr) {
-        return segmentTree[ti];
-    }
-
-    int tm = (tl + tr) / 2;
-
-    return op_inclusive(l, min(r, tm), ti*2, tl, tm) +
-         op_inclusive(max(l, tm+1), r, ti*2+1, tm+1, tr);
+void add(int i, int delta) {
+    for (; i <= n; i += i & (-i))
+        fw[i] += delta;
 }
 
-void set_value(int i, int v, int ti, int tl, int tr) {
-    if (tl == tr) {
-        segmentTree[ti]++;
-        return;
-    }
-    
-    int tm = (tl + tr) / 2;
-    if (i <= tm)
-        set_value(i, v, ti*2, tl, tm);
-    else
-        set_value(i, v, ti*2+1, tm+1, tr);
-
-    segmentTree[ti] = segmentTree[ti*2] + segmentTree[ti*2+1];
+int get(int i) {
+    int ans = 0;
+    for (; i > 0; i -= i & (-i))
+        ans += fw[i];
+    return ans;
 }
-
-void build(int ti, int tl, int tr) {
-    if (tl == tr) {
-        segmentTree[ti] = 0;
-        return;
-    }
-    int tm = (tl + tr) / 2;
-    build(ti*2, tl, tm);
-    build(ti*2+1, tm+1, tr);
-    segmentTree[ti] = segmentTree[ti*2] + segmentTree[ti*2+1];
-}
-
 
 
 int main() {
     cin.tie(0);
     ios_base::sync_with_stdio(0);
 
-    int n, q;
     cin >> n >> q;
 
-    segmentTree.resize(4*n);
+    fw.resize(n+1, 0);
     for (int i = 0; i < n; i++) {
         int value;
         cin >> value;
         inputs.push_back(value);
+        add(i+1, i+1);
     }
-    build(1, 0, n-1);
+
+    for(int i = 1; i <= n; i++) {
+                cout << fw[i] << " ";
+            }
+            cout << "\n";
 
     int cam = 0;
     for (int i = 0; i < q; i++) {
@@ -72,15 +47,44 @@ int main() {
         if (op == 'm') {
             int value;
             cin >> value;
-
             cam += value;
         }
         else if (op == 'd') {
-            set_value(cam, 1, 1, 0, n-1);
+            fw.resize(n, 0);
+            for(int i = 1; i <= n; i++) {
+                if(i > cam) {
+                    add(i+1, i);
+                }
+                else {
+                    add(i+1, i+1);
+                }
+            }
+
+            for(int i = 1; i <= n; i++) {
+                cout << fw[i] << " ";
+            }
+            cout << "\n";
         }
         else if (op == 'q') {
-            int invalid = op_inclusive(0, cam, 1, 0, n-1);
-            cout << inputs[cam + invalid] << "\n";
+            // Searchs for cam on tree
+            int lo = 0;
+            int hi = n;
+            while (lo < hi) {
+                int mi = lo + (hi-lo) / 2;
+                
+                if (get(mi) < get(cam)) {
+                    lo = mi + 1;
+                }
+                else {
+                    hi = mi;
+                }
+            }
+
+            cout << inputs[lo] << "\n";
+        }
+
+        if(i == 4) {
+            return 0;
         }
     }
 }
