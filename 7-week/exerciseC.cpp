@@ -34,11 +34,21 @@ int main() {
     ll counter = 0;
     for(int s = 1; s < (1 << c); s++) {
         ll product = 1;
+        bool overflow = false;
         for(int i = 0; i < c; i++) {
             if(bool(s & (1 << i))) {
-                ll res = lcm(product, inputs[i]) + bool(inputs[i] % product);
-                product *= res;
+                ll res = lcm(product, inputs[i]);
+                if (res % inputs[i] == 0 && res % product == 0) {
+                    product = res;
+                }
+                else {
+                    overflow = true;
+                }
             }
+        }
+
+        if (product > b || overflow) {
+            continue;
         }
 
         if(__builtin_parityll(s)) {
